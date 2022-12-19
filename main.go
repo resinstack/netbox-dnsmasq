@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"os"
 	"strings"
@@ -26,7 +26,7 @@ func strPtr(s string) *string {
 
 func main() {
 	if _, verbose := os.LookupEnv("VERBOSE"); !verbose {
-		log.SetOutput(ioutil.Discard)
+		log.SetOutput(io.Discard)
 	}
 
 	site := os.Getenv("NETBOX_SITE")
