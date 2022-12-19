@@ -2,11 +2,9 @@ module github.com/the-maldridge/netbox-dnsmasq
 
 go 1.19
 
-replace github.com/netbox-community/go-netbox => ../go-netbox
-
 require (
 	github.com/go-openapi/runtime v0.24.2
-	github.com/netbox-community/go-netbox v0.0.0-20220424102755-32c009cb5190
+	github.com/netbox-community/go-netbox v0.0.0-20221114202533-18aea9a4ac2c
 )
 
 require (
