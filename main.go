@@ -32,6 +32,9 @@ func main() {
 	site := os.Getenv("NETBOX_SITE")
 
 	hostTmplStr := "{{JoinStrings .HWAddr \",\"}},{{.Addr}}\n"
+	if hts := os.Getenv("DNSMASQ_TEMPLATE"); hts != "" {
+		hostTmplStr = hts
+	}
 	hostTmpl := template.New("dhcp-host")
 	hostTmpl = hostTmpl.Funcs(template.FuncMap{"JoinStrings": strings.Join})
 	hostTmpl, err := hostTmpl.Parse(hostTmplStr)
