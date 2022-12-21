@@ -1,0 +1,6 @@
+#!/bin/sh
+
+while true ; do
+    /usr/local/bin/netbox-dhcp-hosts > /run/dhcp-hosts && pkill -SIGHUP dnsmasq
+    sleep 600
+done

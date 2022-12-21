@@ -1,0 +1,4 @@
+#!/bin/sh
+
+: ${DNSMASQ_CONFIG:-/etc/dnsmasq.conf}
+exec dnsmasq -k --conf-file=$DNSMASQ_CONFIG
