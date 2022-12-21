@@ -1,0 +1,2 @@
+#!/bin/sh
+exec /usr/local/bin/shoelaces -data-dir /var/lib/shoelaces -static-dir /usr/share/shoelaces/web
