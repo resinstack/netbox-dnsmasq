@@ -9,6 +9,11 @@ on:
 jobs:
   main:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        flavor:
+          - base
+          - shoelaces
     steps:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -28,6 +33,7 @@ jobs:
         with:
           file: Containerfile
           push: true
-          tags: "ghcr.io/${{ github.repository }}:${{ env.RELEASE_VERSION }}"
+          target: "${{ matrix.flavor }}"
+          tags: "ghcr.io/${{ github.repository }}:${{ matrix.flavor }}-${{ env.RELEASE_VERSION }}"
           labels: |
             org.opencontainers.image.source=${{ github.repositoryUrl }}
