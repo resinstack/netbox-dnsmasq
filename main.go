@@ -1,16 +1,13 @@
 package main
 
 import (
-	"fmt"
 	"io"
 	"log"
 	"os"
 	"strings"
 	"text/template"
 
-	httptransport "github.com/go-openapi/runtime/client"
-	"github.com/netbox-community/go-netbox/netbox/client"
-	"github.com/netbox-community/go-netbox/netbox/client/dcim"
+	"github.com/resinstack/netbox-dnsmasq/netbox"
 )
 
 type DHCPHost struct {
@@ -28,8 +25,6 @@ func main() {
 	if _, verbose := os.LookupEnv("VERBOSE"); !verbose {
 		log.SetOutput(io.Discard)
 	}
-
-	site := os.Getenv("NETBOX_SITE")
 
 	hostTmplStr := "{{JoinStrings .HWAddr \",\"}},{{.Addr}}\n"
 	if hts := os.Getenv("DNSMASQ_TEMPLATE"); hts != "" {
@@ -49,68 +44,51 @@ func main() {
 		os.Exit(1)
 	}
 
-	netboxHost := os.Getenv("NETBOX_HOST")
-	if netboxHost == "" {
-		log.Println("Please provide netbox host via env var NETBOX_HOST")
+	netboxURL := os.Getenv("NETBOX_URL")
+	if netboxURL == "" {
+		log.Println("Please provide netbox url via NETBOX_URL")
 		os.Exit(1)
 	}
 
-	protocol := os.Getenv("NETBOX_PROTOCOL")
-	if protocol == "" {
-		protocol = "https"
-	}
-
-	transport := httptransport.New(netboxHost, client.DefaultBasePath, []string{protocol})
-	transport.DefaultAuthentication = httptransport.APIKeyAuth("Authorization", "header", "Token "+token)
-
-	c := client.New(transport, nil)
-	req := dcim.NewDcimDevicesListParams()
-	req.WithTag(strPtr("pxe-enable"))
-	if site != "" {
-		req.WithSite(&site)
-	}
-
-	res, err := c.Dcim.DcimDevicesList(req, nil)
+	site := os.Getenv("NETBOX_SITE")
+	nb, err := netbox.NewClient(netbox.WithNetBoxURL(netboxURL), netbox.WithToken(token))
 	if err != nil {
-		log.Println("Error retreiving interface list", err)
-		os.Exit(2)
+		log.Println("Error initializing client:", err)
+		os.Exit(1)
 	}
 
-	hosts := make(map[int64]*DHCPHost, *res.Payload.Count)
-	for _, dev := range res.Payload.Results {
-		if dev.PrimaryIp4 == nil {
-			log.Printf("Primary IPv4 unset on %s, skipping...", *dev.Name)
-			continue
-		}
-		ipaddr := strings.SplitN(*dev.PrimaryIp4.Address, "/", 2)[0]
+	devices, err := nb.ListDevices(site)
+	if err != nil {
+		log.Println("Error listing devices:", err)
+		os.Exit(1)
+	}
 
-		ifreq := dcim.NewDcimInterfacesListParams()
-		ifreq.WithDeviceID(strPtr(fmt.Sprintf("%d", dev.ID)))
-		ifreq.WithMacAddressn(strPtr("null"))
+	hosts := make(map[int64]*DHCPHost, len(devices))
+	for _, dev := range devices {
+		ipaddr := strings.SplitN(dev.PrimaryIPv4.Address, "/", 2)[0]
 
-		ifres, err := c.Dcim.DcimInterfacesList(ifreq, nil)
+		ifres, err := nb.ListInterfaces(dev.ID)
 		if err != nil {
-			log.Println("Error pulling interfaces for device", err)
+			log.Printf("Error pulling interfaces for %s: %v", dev.Name, err)
+			continue
+		}
+		if len(ifres) == 0 {
+			log.Printf("No interface available for PXE! (%s)", dev.Name)
 			continue
 		}
 
-		if *ifres.Payload.Count == 0 {
-			log.Printf("No interface available for PXE! (%s)", *dev.Name)
-			continue
-		}
-
-		hwaddrs := make([]string, *ifres.Payload.Count)
-		for i, int := range ifres.Payload.Results {
-			if int.MacAddress == nil {
+		hwaddrs := make([]string, len(ifres))
+		for i, int := range ifres {
+			if int.MACAddress == "" {
 				continue
 			}
-			hwaddrs[i] = strings.ToLower(*int.MacAddress)
+			hwaddrs[i] = strings.ToLower(int.MACAddress)
 		}
 
-		log.Println(dev.ID, *dev.Name, ipaddr, hwaddrs)
+		log.Println(dev.ID, dev.Name, ipaddr, hwaddrs)
 		hosts[dev.ID] = &DHCPHost{
 			DeviceID: dev.ID,
-			Name:     *dev.Name,
+			Name:     dev.Name,
 			Addr:     ipaddr,
 			HWAddr:   hwaddrs,
 		}
