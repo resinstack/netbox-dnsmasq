@@ -3,6 +3,15 @@ WORKDIR /netbox-dnsmasq
 COPY . .
 RUN go mod vendor && go build -o /netbox-dhcp-hosts .
 
+FROM docker.io/alpine:3.17 as ipxe-build
+ARG IPXE_REV=ab19546
+WORKDIR /ipxe
+RUN apk update && apk add git build-base perl && \
+    git clone https://github.com/ipxe/ipxe.git . && \
+    git checkout ${IPXE_REV} && cd src && \
+    make bin-x86_64-efi/ipxe.efi && \
+    make bin-x86_64-efi/snponly.efi
+
 FROM docker.io/alpine:3.17 as base
 WORKDIR /
 COPY --from=build /netbox-dhcp-hosts /usr/local/bin/netbox-dhcp-hosts
@@ -11,8 +20,9 @@ COPY runit/netbox-dnsmasq-dhcp /etc/service/netbox-dnsmasq-dhcp
 RUN apk update && \
     apk add tini runit dnsmasq && \
     rm -rf /var/cache/apk && \
-    mkdir -p /var/lib/tftp && \
-    wget -O /var/lib/tftp/ipxe.efi https://boot.ipxe.org/ipxe.efi
+    mkdir -p /var/lib/tftp
+COPY --from=ipxe-build /ipxe/src/bin-x86_64-efi/ipxe.efi /var/lib/tftp/ipxe.efi
+COPY --from=ipxe-build /ipxe/src/bin-x86_64-efi/snponly.efi /var/lib/tftp/snponly.efi
 ENTRYPOINT ["/sbin/tini", "/sbin/runsvdir", "/etc/service"]
 
 FROM docker.io/golang:1.19-alpine as shoelaces_build
