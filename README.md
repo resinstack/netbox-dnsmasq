@@ -14,8 +14,7 @@ in the environment:
     global data.
   * `NETBOX_TOKEN` - Token with suitable permissions to read netbox
     data.
-  * `NETBOX_PROTOCOL` - Connect the given protocol, defaults to https.
-  * `NETBOX_HOST` - Address of the netbox host to connect to.
+  * `NETBOX_URL` - URL to the netbox server.
   * `DNSMASQ_TEMPLATE` - A go template expression for the dhcp-hosts
     file.  Defaults to a suitable configuration for IPv4.  The default
     template is `{{JoinStrings .HWAddr ","}},{{.Addr}}`.
