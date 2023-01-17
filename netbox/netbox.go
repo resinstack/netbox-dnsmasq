@@ -8,6 +8,8 @@ import (
 	"time"
 )
 
+// Client is a minimal client to the netbox API suitable for pulling
+// information about interfaces only.
 type Client struct {
 	baseURL    *url.URL
 	httpClient *http.Client
@@ -15,6 +17,8 @@ type Client struct {
 	token string
 }
 
+// NewClient creates a client connected to the specified netbox
+// server.
 func NewClient(opts ...Option) (*Client, error) {
 	x := Client{
 		baseURL: &url.URL{
@@ -34,6 +38,7 @@ func NewClient(opts ...Option) (*Client, error) {
 	return &x, nil
 }
 
+// ListDevices searches for netboxes that match the given options.
 func (nb *Client) ListDevices(site string) ([]Device, error) {
 	queryURL := *nb.baseURL
 	queryURL.Path = "/api/dcim/devices/"
@@ -87,6 +92,9 @@ func (nb *Client) ListDevices(site string) ([]Device, error) {
 	return devices, nil
 }
 
+// ListInterfaces returns a list of interfaces for a given device that
+// have a non-null MAC address, and that are not management-only
+// interfaces.
 func (nb *Client) ListInterfaces(deviceID int64) ([]Interface, error) {
 	queryURL := *nb.baseURL
 	queryURL.Path = "/api/dcim/interfaces/"
@@ -98,6 +106,7 @@ func (nb *Client) ListInterfaces(deviceID int64) ([]Interface, error) {
 	queryVals := url.Values{}
 	queryVals.Add("device_id", fmt.Sprintf("%d", deviceID))
 	queryVals.Add("mac_address__n", "null")
+	queryVals.Add("mgmt_only", "false")
 
 	queryURL.RawQuery = queryVals.Encode()
 

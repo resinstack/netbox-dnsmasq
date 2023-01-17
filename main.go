@@ -10,15 +10,13 @@ import (
 	"github.com/resinstack/netbox-dnsmasq/netbox"
 )
 
+// DHCPHost contains the information required to generate a matching
+// line in a dhcp configuration daemon.
 type DHCPHost struct {
 	DeviceID int64
 	HWAddr   []string
 	Name     string
 	Addr     string
-}
-
-func strPtr(s string) *string {
-	return &s
 }
 
 func main() {
