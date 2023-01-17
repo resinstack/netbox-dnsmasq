@@ -48,14 +48,15 @@ func main() {
 		os.Exit(1)
 	}
 
-	site := os.Getenv("NETBOX_SITE")
 	nb, err := netbox.NewClient(netbox.WithNetBoxURL(netboxURL), netbox.WithToken(token))
 	if err != nil {
 		log.Println("Error initializing client:", err)
 		os.Exit(1)
 	}
 
-	devices, err := nb.ListDevices(site)
+	site := os.Getenv("NETBOX_SITE")
+	tag := os.Getenv("NETBOX_TAG")
+	devices, err := nb.ListDevices(site, tag)
 	if err != nil {
 		log.Println("Error listing devices:", err)
 		os.Exit(1)

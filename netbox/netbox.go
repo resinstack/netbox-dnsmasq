@@ -39,13 +39,16 @@ func NewClient(opts ...Option) (*Client, error) {
 }
 
 // ListDevices searches for netboxes that match the given options.
-func (nb *Client) ListDevices(site string) ([]Device, error) {
+func (nb *Client) ListDevices(site, tag string) ([]Device, error) {
 	queryURL := *nb.baseURL
 	queryURL.Path = "/api/dcim/devices/"
 
 	queryVals := url.Values{}
-	queryVals.Add("tag", "pxe-enable")
 	queryVals.Add("has_primary_ip", "yes")
+
+	if tag != "" {
+		queryVals.Add("tag", tag)
+	}
 
 	if site != "" {
 		queryVals.Add("site", site)
