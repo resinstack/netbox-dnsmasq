@@ -33,6 +33,7 @@ RUN apk add git && \
 
 FROM base as shoelaces
 WORKDIR /
+ENV SHOELACES_MAPFILE=/var/lib/shoelaces/mappings.yaml
 COPY --from=shoelaces_build /shoelaces/shoelaces /usr/local/bin/shoelaces
 COPY --from=shoelaces_build /shoelaces/web /usr/share/shoelaces/web
 COPY runit/shoelaces /etc/service/shoelaces

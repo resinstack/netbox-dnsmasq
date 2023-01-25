@@ -1,6 +1,16 @@
 #!/bin/sh
 
 while true ; do
-    /usr/local/bin/netbox-dhcp-hosts > /run/dhcp-hosts && pkill -SIGHUP dnsmasq
+    if /usr/local/bin/netbox-dhcp-hosts > /run/dhcp-hosts.next ; then
+        if ! diff /run/dhcp-hosts /run/dhcp-hosts.next ; then
+            mv /run/dhcp-hosts.next /run/dhcp-hosts
+
+            pkill -SIGHUP dnsmasq
+
+            if [ -z "$SHOELACES_MAPFILE" ] ; then
+                sv restart shoelaces
+            fi
+        fi
+    fi
     sleep 600
 done

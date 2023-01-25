@@ -19,9 +19,15 @@ in the environment:
   * `DNSMASQ_TEMPLATE` - A go template expression for the dhcp-hosts
     file.  Defaults to a suitable configuration for IPv4.  The default
     template is `{{JoinStrings .HWAddr ","}},{{.Addr}}`.
+  * `SHOELACES_MAPFILE` - A file to write out shoelaces mappings too.
+    Must be named `mappings.yaml` and at the path expected by
+    shoelaces.  Only relevant in images that contain shoelaces.
+  * `SHOELACES_TAG_PREFIX` - A prefix that if found on a tag will be
+    used to form the mapping for shoelaces to supply the correct boot
+    files to the machine without human interaction.
 
 The search through netbox by default pulls hosts that have the
-`pxe-enable` tag set.  Hosts are then filtered to ensure they hae a
+$NETBOX_TAG tag set.  Hosts are then filtered to ensure they have a
 primary IPv4 address and at least one interface that has a MAC address
 set.  Hosts that have the correct tag but do not have at least one MAC
 address associated with a non-management-only interface and a primary
@@ -36,7 +42,6 @@ bonds, interface teaming, or other advanced interface topologies.  At
 install time, it is more likely that only one interface will be
 brought up, but it is still prefered that the machine get its final
 address.
-
 
 ## Configuring dnsmasq
 
@@ -71,3 +76,22 @@ In this example the server hosting the PXE services is located at
 dnsmasq not to provide services to hosts that do not have a
 pre-existing reservation, which can be useful if your network does not
 use DHCP except for machine installation.
+
+## Using with Shoelaces
+
+Shoelaces is a powerful ipxe mapping tool that can mux different boot
+images to different machines by hand or by address.  Each build of the
+containers from this repo comes in a non-shoelaces flavor and a
+shoelaces flavor.  Using shoelaces will provide a web interface on
+port 8081 that allows you to manually select ipxe scripts.  Shoelaces
+expects to find your template scripts in `/var/lib/shoelaces/ipxe` and
+can serve static assets for you from `/var/lib/shoelaces/static`.
+
+Shoelaces is also capable of directly mapping a machine to its boot
+scripts based on tags in netbox.  To use this behavior configure the
+value of `SHOELACES_TAG_PREFIX` to the prefix used by the tags you
+have set in Netbox.  For example, if you wanted machines that posess
+the tags `pxe-zerotouch-deb11` to boot with the ipxe script
+`deb11.ipxe`, you would configure the tag to be `pxe-zerotouch-`. Only
+the first tag found will be mapped, so its a good idea to carefully
+plan the tag structure in use for these tags to be unique.
