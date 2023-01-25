@@ -1,6 +1,17 @@
 #!/bin/sh
 
 while true ; do
-    /usr/local/bin/netbox-dhcp-hosts > /run/dhcp-hosts && pkill -SIGHUP dnsmasq
+    if /usr/local/bin/netbox-dhcp-hosts | sort > /run/dhcp-hosts.next ; then
+        if ! diff /run/dhcp-hosts /run/dhcp-hosts.next ; then
+            echo "Updated host mappings, reloading services"
+            mv /run/dhcp-hosts.next /run/dhcp-hosts
+
+            pkill -SIGHUP dnsmasq
+
+            if [ -n "$SHOELACES_TAG_PREFIX" ] ; then
+                sv restart shoelaces
+            fi
+        fi
+    fi
     sleep 600
 done
