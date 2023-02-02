@@ -19,6 +19,9 @@ in the environment:
   * `DNSMASQ_TEMPLATE` - A go template expression for the dhcp-hosts
     file.  Defaults to a suitable configuration for IPv4.  The default
     template is `{{JoinStrings .HWAddr ","}},{{.Addr}}`.
+  * `DNSMASQ_HOSTSFILE` - A file to write out the dhcp hosts
+    configuration to.  This must match wherever you configure your
+    dnsmasq config file to search for dhcp hosts.
   * `SHOELACES_MAPFILE` - A file to write out shoelaces mappings too.
     Must be named `mappings.yaml` and at the path expected by
     shoelaces.  Only relevant in images that contain shoelaces.

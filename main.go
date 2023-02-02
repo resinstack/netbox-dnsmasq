@@ -132,20 +132,31 @@ func main() {
 		}
 	}
 
-	for _, host := range hosts {
-		if err := hostTmpl.Execute(os.Stdout, host); err != nil {
-			log.Println("Error executing template", err)
+	if os.Getenv("DNSMASQ_HOSTSFILE") != "" {
+		f, err := os.Create(os.Getenv("DNSMASQ_HOSTSFILE"))
+		if err != nil {
+			log.Println("Error writing out hosts file", err)
+			os.Exit(1)
+		}
+		defer f.Close()
+
+		for _, host := range hosts {
+			if err := hostTmpl.Execute(f, host); err != nil {
+				log.Println("Error executing template", err)
+			}
 		}
 	}
 
 	if os.Getenv("SHOELACES_MAPFILE") != "" {
-		bytes, err := json.Marshal(ShoelacesNetworkMap{NetworkMaps: shoenets})
+		f, err := os.Create(os.Getenv("SHOELACES_MAPFILE"))
 		if err != nil {
-			log.Println("Error marshalling shoelaces mappings", err)
+			log.Println("Error opening shoelaces map file", err)
 			os.Exit(1)
 		}
+		defer f.Close()
 
-		if err := os.WriteFile(os.Getenv("SHOELACES_MAPFILE"), bytes, 0644); err != nil {
+		enc := json.NewEncoder(f)
+		if err := enc.Encode(ShoelacesNetworkMap{NetworkMaps: shoenets}); err != nil {
 			log.Println("Error writing shoelaces mappings", err)
 			os.Exit(1)
 		}
