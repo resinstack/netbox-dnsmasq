@@ -17,6 +17,8 @@ WORKDIR /
 COPY --from=build /netbox-dhcp-hosts /usr/local/bin/netbox-dhcp-hosts
 COPY runit/dnsmasq /etc/service/dnsmasq
 COPY runit/netbox-dnsmasq-dhcp /etc/service/netbox-dnsmasq-dhcp
+ENV DNSMASQ_HOSTSFILE=/run/dhcp-hosts.next
+ENV REFRESH_INTERVAL=600
 RUN apk update && \
     apk add tini runit dnsmasq && \
     rm -rf /var/cache/apk && \
@@ -33,7 +35,7 @@ RUN apk add git && \
 
 FROM base as shoelaces
 WORKDIR /
-ENV SHOELACES_MAPFILE=/var/lib/shoelaces/mappings.yaml
+ENV SHOELACES_MAPFILE=/var/lib/shoelaces/mappings.yaml.next
 COPY --from=shoelaces_build /shoelaces/shoelaces /usr/local/bin/shoelaces
 COPY --from=shoelaces_build /shoelaces/web /usr/share/shoelaces/web
 COPY runit/shoelaces /etc/service/shoelaces
