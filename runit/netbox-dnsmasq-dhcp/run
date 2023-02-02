@@ -1,17 +1,19 @@
 #!/bin/sh
 
 while true ; do
-    if /usr/local/bin/netbox-dhcp-hosts | sort > /run/dhcp-hosts.next ; then
+    if /usr/local/bin/netbox-dhcp-hosts ; then
         if ! diff /run/dhcp-hosts /run/dhcp-hosts.next ; then
             echo "Updated host mappings, reloading services"
             mv /run/dhcp-hosts.next /run/dhcp-hosts
-
             pkill -SIGHUP dnsmasq
+        fi
 
+        if ! diff /var/lib/shoelaces/mappings.yaml /var/lib/shoelaces/mappings.yaml.next ; then
             if [ -n "$SHOELACES_TAG_PREFIX" ] ; then
+                mv /var/lib/shoelaces/mappings.yaml.next /var/lib/shoelaces/mappings.yaml
                 sv restart shoelaces
             fi
         fi
     fi
-    sleep 600
+    sleep "$REFRESH_INTERVAL"
 done
