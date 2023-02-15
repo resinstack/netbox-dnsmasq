@@ -86,6 +86,9 @@ func main() {
 	hosts := make(map[int64]*DHCPHost, len(devices))
 	shoenets := []ShoelacesHost{}
 	for _, dev := range devices {
+		if dev.PrimaryIPv4.Address == "" {
+			continue
+		}
 		ipaddr := strings.SplitN(dev.PrimaryIPv4.Address, "/", 2)[0]
 
 		ifres, err := nb.ListInterfaces(dev.ID)
