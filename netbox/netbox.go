@@ -44,7 +44,7 @@ func (nb *Client) ListDevices(site, tag string) ([]Device, error) {
 	queryURL.Path = "/api/dcim/devices/"
 
 	queryVals := url.Values{}
-	queryVals.Add("has_primary_ip", "yes")
+	queryVals.Add("has_primary_ip", "true")
 
 	if tag != "" {
 		queryVals.Add("tag", tag)
