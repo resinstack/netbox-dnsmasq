@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"sort"
 	"strings"
 	"text/template"
 
@@ -136,6 +137,17 @@ func main() {
 	}
 
 	if os.Getenv("DNSMASQ_HOSTSFILE") != "" {
+		tHosts := make([]*DHCPHost, len(hosts))
+		i := 0
+		for _, host := range hosts {
+			sort.Strings(host.HWAddr)
+			tHosts[i] = host
+			i++
+		}
+		sort.Slice(tHosts, func(i, j int) bool {
+			return tHosts[i].HWAddr[0] < tHosts[j].HWAddr[0]
+		})
+
 		f, err := os.Create(os.Getenv("DNSMASQ_HOSTSFILE"))
 		if err != nil {
 			log.Println("Error writing out hosts file", err)
@@ -143,7 +155,7 @@ func main() {
 		}
 		defer f.Close()
 
-		for _, host := range hosts {
+		for _, host := range tHosts {
 			if err := hostTmpl.Execute(f, host); err != nil {
 				log.Println("Error executing template", err)
 			}
