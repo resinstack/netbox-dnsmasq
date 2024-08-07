@@ -19,6 +19,9 @@ type DHCPHost struct {
 	HWAddr   []string
 	Name     string
 	Addr     string
+
+	IPMIMAC  string
+	IPMIAddr string
 }
 
 // ShoelacesHost is a host that can be mapped without user input in
@@ -45,7 +48,7 @@ func main() {
 		log.SetOutput(io.Discard)
 	}
 
-	hostTmplStr := "{{JoinStrings .HWAddr \",\"}},{{.Addr}}\n"
+	hostTmplStr := "{{JoinStrings .HWAddr \",\"}},{{.Addr}}\n{{ if and .IPMIMAC .IPMIAddr }}{{.IPMIMAC}},{{.IPMIAddr}}\n{{ end }}"
 	if hts := os.Getenv("DNSMASQ_TEMPLATE"); hts != "" {
 		hostTmplStr = hts
 	}
@@ -92,7 +95,7 @@ func main() {
 		}
 		ipaddr := strings.SplitN(dev.PrimaryIPv4.Address, "/", 2)[0]
 
-		ifres, err := nb.ListInterfaces(dev.ID)
+		ifres, err := nb.ListInterfaces(dev.ID, false)
 		if err != nil {
 			log.Printf("Error pulling interfaces for %s: %v", dev.Name, err)
 			continue
@@ -110,12 +113,23 @@ func main() {
 			hwaddrs[i] = strings.ToLower(int.MACAddress)
 		}
 
-		log.Println(dev.ID, dev.Name, ipaddr, hwaddrs)
+		// Fetch in OOB address information.  Useful for
+		// supplying DHCP to an IPMI fabric.
+		ipmiAddr := strings.SplitN(dev.IPMIAddress.Address, "/", 2)[0]
+		ipmiRes, _ := nb.ListInterfaces(dev.ID, true)
+		ipmiMAC := ""
+		if len(ipmiRes) == 1 {
+			ipmiMAC = strings.ToLower(ipmiRes[0].MACAddress)
+		}
+
+		log.Println(dev.ID, dev.Name, ipaddr, hwaddrs, ipmiAddr, ipmiMAC)
 		hosts[dev.ID] = &DHCPHost{
 			DeviceID: dev.ID,
 			Name:     dev.Name,
 			Addr:     ipaddr,
 			HWAddr:   hwaddrs,
+			IPMIAddr: ipmiAddr,
+			IPMIMAC:  ipmiMAC,
 		}
 
 		// Construct the shoelaces mapping if enabled.

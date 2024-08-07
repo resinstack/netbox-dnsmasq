@@ -98,7 +98,7 @@ func (nb *Client) ListDevices(site, tag string) ([]Device, error) {
 // ListInterfaces returns a list of interfaces for a given device that
 // have a non-null MAC address, and that are not management-only
 // interfaces.
-func (nb *Client) ListInterfaces(deviceID int64) ([]Interface, error) {
+func (nb *Client) ListInterfaces(deviceID int64, mgmtOnly bool) ([]Interface, error) {
 	queryURL := *nb.baseURL
 	queryURL.Path = "/api/dcim/interfaces/"
 
@@ -109,7 +109,7 @@ func (nb *Client) ListInterfaces(deviceID int64) ([]Interface, error) {
 	queryVals := url.Values{}
 	queryVals.Add("device_id", fmt.Sprintf("%d", deviceID))
 	queryVals.Add("mac_address__n", "null")
-	queryVals.Add("mgmt_only", "false")
+	queryVals.Add("mgmt_only", fmt.Sprintf("%t", mgmtOnly))
 
 	queryURL.RawQuery = queryVals.Encode()
 

@@ -21,6 +21,7 @@ type Device struct {
 	ID          int64
 	Name        string  `json:"name"`
 	PrimaryIPv4 Address `json:"primary_ip4"`
+	IPMIAddress Address `json:"oob_ip"`
 	Tags        []Tag   `json:"tags"`
 }
 
