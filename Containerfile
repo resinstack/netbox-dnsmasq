@@ -30,7 +30,7 @@ ENTRYPOINT ["/sbin/tini", "/sbin/runsvdir", "/etc/service"]
 FROM docker.io/golang:1.23-alpine as shoelaces_build
 WORKDIR /shoelaces
 RUN apk add git && \
-    git clone -b v1.2.0 https://github.com/thousandeyes/shoelaces.git . && \
+    git clone -b v1.3.2.0 https://github.com/thousandeyes/shoelaces.git . && \
     go mod vendor && go build -o ./shoelaces .
 
 FROM base as shoelaces
