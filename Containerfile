@@ -1,4 +1,4 @@
-FROM docker.io/golang:1.19-alpine as build
+FROM docker.io/golang:1.23-alpine AS build
 WORKDIR /netbox-dnsmasq
 COPY . .
 RUN go mod vendor && go build -o /netbox-dhcp-hosts .
@@ -27,7 +27,7 @@ COPY --from=ipxe-build /ipxe/src/bin-x86_64-efi/ipxe.efi /var/lib/tftp/ipxe.efi
 COPY --from=ipxe-build /ipxe/src/bin-x86_64-efi/snponly.efi /var/lib/tftp/snponly.efi
 ENTRYPOINT ["/sbin/tini", "/sbin/runsvdir", "/etc/service"]
 
-FROM docker.io/golang:1.19-alpine as shoelaces_build
+FROM docker.io/golang:1.23-alpine as shoelaces_build
 WORKDIR /shoelaces
 RUN apk add git && \
     git clone -b v1.2.0 https://github.com/thousandeyes/shoelaces.git . && \
