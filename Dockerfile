@@ -29,8 +29,13 @@ ENTRYPOINT ["/sbin/tini", "/sbin/runsvdir", "/etc/service"]
 
 FROM docker.io/golang:1.23-alpine AS shoelaces_build
 WORKDIR /shoelaces
-RUN apk add git && \
+ARG SHOELACES_PRS=
+ARG SHOELACES_ORIGIN=https://github.com/thousandeyes/shoelaces
+RUN apk add git curl && \
     git clone -b v1.3.2 https://github.com/thousandeyes/shoelaces.git . && \
+        git config --global user.email "build@localhost" && \
+        git config --global user.name "Shoelaces Build" && \
+    for p in ${SHOELACES_PRS} ; do curl -L ${SHOELACES_ORIGIN}/pull/$p.patch | git am - ; done && \
     go mod vendor && go build -o ./shoelaces .
 
 FROM base AS shoelaces
